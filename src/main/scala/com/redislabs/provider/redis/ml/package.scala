@@ -5,7 +5,7 @@ import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 
 import redis.clients.jedis.Protocol.Command
 import redis.clients.jedis.{Jedis, _}
-
+import com.redislabs.client.redisml.MLClient
 
 class Forest(trees: Array[DecisionTreeClassificationModel]) {
 
@@ -41,7 +41,7 @@ class Forest(trees: Array[DecisionTreeClassificationModel]) {
     jedis.getClient().getStatusCodeReply
     for (cmd <- commands) {
       val cmdArray = forestId +: cmd.split(",")
-      jedis.getClient.sendCommand(Command.FOREST_ADD, cmdArray: _*)
+      jedis.getClient.sendCommand(MLClient.ModuleCommand.FOREST_ADD, cmdArray: _*)
       jedis.getClient().getStatusCodeReply
     }
     jedis.getClient.sendCommand(Command.EXEC)
