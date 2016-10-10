@@ -10,6 +10,8 @@ import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.{SparkSession, _}
 import redis.clients.jedis.Protocol.Command
 import redis.clients.jedis.{Jedis, _}
+import com.redislabs.client.redisml.MLClient
+import com.redislabs.provider.redis.ml.Forest
 
 /** Load a dataset from the given path, using the given format */
 def loadData(
@@ -138,57 +140,69 @@ if (rfModel.totalNumNodes < 30) {
   println(rfModel) // Print model summary.
 }
 
+val f = new Forest(rfModel.trees)
+f.loadToRedis("forest-test", "localhost")
 
-/* val trees = rfModel.trees
+val localData = test.collect
 
-def subtreeToRedisString(n: org.apache.spark.ml.tree.Node, path: String = "."): String = {
-  val prefix: String = s",${path},"
-  n.getClass.getSimpleName match {
-    case "InternalNode" => {
-      println("internal")
-      val in = n.asInstanceOf[org.apache.spark.ml.tree.InternalNode]
-      val splitStr = in.split match{
-          case contSplit: ContinuousSplit => s"numeric,${in.split.featureIndex},${contSplit.threshold}"
-          case catSplit: CategoricalSplit => s"categoric,${in.split.featureIndex}," + catSplit.leftCategories.mkString(":")
-        }
-      prefix + splitStr + subtreeToRedisString(in.leftChild, path + "l") +
-      subtreeToRedisString(in.rightChild, path + "r")
-    }
-    case "LeafNode" => {
-      println("leaf")
-      prefix + s"leaf,${n.prediction}"
-    }
+def makeInputString(i: Int): String = {
+  val sparseRecord = localData(i)(1).asInstanceOf[org.apache.spark.ml.linalg.SparseVector]
+  val indices = sparseRecord.indices
+  val values = sparseRecord.values
+  var sep = ""
+  var inputStr = ""
+  for (i <- 0 to ((indices.length - 1))) {
+    inputStr = inputStr + sep + indices(i).toString + ":" + values(i).toString
+    sep = ","
   }
+  inputStr
 }
 
-def toRedisString: String = {
-  trees.zipWithIndex.map { case (tree, treeIndex) =>
-    s"${treeIndex}" + subtreeToRedisString(tree.rootNode, ".")
-  }.fold("") {(a, b) => a + "\n" + b}
-}
+var redisRes = ""
+var sparkRes = 0.0
+var rtotal = 0.0
+var stotal = 0.0
 
-val jedis = new Jedis("localhost")
+def benchmark(b: Int) {
+  val jedis = new Jedis("localhost")
+  for (i <- 0 to b) {
+    val rt0 = System.nanoTime()
+    jedis.getClient.sendCommand(MLClient.ModuleCommand.FOREST_RUN, "forest-test", makeInputString(i))
+//    print("forest-test", makeInputString(i))
+    redisRes = jedis.getClient().getStatusCodeReply
+    val rt1 = System.nanoTime()
+    println("Redis time: " + (rt1 - rt0) / 1000000.0 + "ms, res=" + redisRes)
 
-
-def loadToRedis() {
-  val commands = toRedisString.split("\n").drop(1)
-  jedis.getClient.sendCommand(Command.MULTI)
-  jedis.getClient().getStatusCodeReply
-  var i = 0
-  val tids = Array(0, 0, 0)
-  for (cmd <- commands) {
-    val cmdArray = s"ftest${i%3}" +: tids(i%3).toString +: cmd.split(",").drop(1)
-    println("Redis command:")
-    println(s"ftest${i%3}," + cmd)
-    println("***************************")
-    jedis.getClient.sendCommand(Command.FOREST_ADD, cmdArray: _*)
-    jedis.getClient().getStatusCodeReply
-    tids(i%3) += 1
-    i += 1
+//    val st0 = System.nanoTime()
+//    sparkRes = rfModel.predict(localData(i).features)
+//    val st1 = System.nanoTime()
+//    println("Spark time: " + (st1 - st0) / 1000000.0 + "ms, res=" + sparkRes.toInt)
+    println("---------------------------------------");
+    rtotal += (rt1 - rt0) / 1000000.0
+//    stotal += (st1 - st0) / 1000000.0
   }
-  jedis.getClient.sendCommand(Command.EXEC)
-  jedis.getClient.getMultiBulkReply
+  println("Classification averages:")
+  println("redis:" + rtotal/b.toFloat + "ms")
+//  println("spark:" + stotal/b.toFloat+ "ms")
 }
-//loadToRedis()
-*/
 
+println("*******************************************")
+
+//println("Load model to Redis:")
+//time(loadToRedis())
+//println("*******************************************")
+//println("Benchmark classification:")
+//benchmark(20)
+//// Save and load model
+//println("*******************************************")
+//println("Spark save model:")
+//time {
+//  model.save(sc, "target/tmp/myRandomForestClassificationModel")
+//}
+//
+//println("*******************************************")
+//println("Spark load model:")
+//time {
+//  val sameModel = RandomForestModel.load(sc, "target/tmp/myRandomForestClassificationModel")
+//}
+//
