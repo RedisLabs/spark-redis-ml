@@ -1,11 +1,25 @@
-# jedis-ml
+# Spark-Redis-ML
 
-### Add  [Redis-ML](https://github.com/RedisLabsModules/redis-ml "Redis-ML") commands to  [Jedis](https://github.com/xetorthio/jedis "Jedis")  
+### A spark package for loading Spark ML models to  [Redis-ML](https://github.com/RedisLabsModules/redis-ml "Redis-ML")   
 
+## Requirments: 
+
+Apache [Spark](https://github.com/apache/spark) 2.0 or later
+
+[Redis](https://github.com/antirez/redis) build from unstable branch
+
+[Jedis](https://github.com/xetorthio/jedis)
+
+[Jedis-ml](https://github.com/RedisLabsModules/jedis-ml)
 
 ## Installation:
 
 ```sh
+#get and build redis-ml
+git clone https://github.com/RedisLabsModules/redis-ml.git
+cd redis-ml/src
+make 
+
 #get and build jedis
 git clone https://github.com/xetorthio/jedis.git
 cd jedis
@@ -17,39 +31,41 @@ git clone https://github.com/RedisLabs/jedis-ml.git
 cd jedis-ml
 cp ../jedis/target/jedis-3.0.0-SNAPSHOT.jar lib/
 mvn install 
+
+#get and build spark-jedis-ml
+cd.. git clone https://github.com/RedisLabs/spark-redis-ml.git
+cd spark-redis-ml
+cp ../jedis/target/jedis-3.0.0-SNAPSHOT.jar lib/
+cp ../jedis-ml/target/jedis-ml-1.0-SNAPSHOT.jar lib/
+sbt assembly
 ```
 
 
 
 ### Usage:
 
-add jedis-ml/target/jedis-ml-1.0-SNAPSHOT.jar to the classpath.
+Run Redis server with redis-ml module:
 
-Scala example (create a forest):
-
-```scala
-import com.redislabs.client.redisml.MLClient
-import redis.clients.jedis.{Jedis, _}
-val jedis = new Jedis("localhost")
-val cmdArr = Array("my_forest","0",".","numeric","1","0.7")
-jedis.getClient.sendCommand(MLClient.ModuleCommand.FOREST_ADD, cmdArr: _*)
-jedis.getClient().getStatusCodeReply
+```sh
+/path/to/redis-server --loadmodule ./redis-ml.so
 ```
 
 
 
-### Supported Commands:
+From Spark root directory, Run Spark shell with the required jars:
 
- FOREST_ADD 
- FOREST_RUN 
- FOREST_TEST 
- LINREG_SET 
- LINREG_PREDICT 
- LOGREG_SET 
- LOGREG_PREDICT
- MATRIX_SET 
- MATRIX_MULTIPLY 
- MATRIX_ADD 
- MATRIX_SCALE
- MATRIX_PRINT 
- MATRIX_TEST 
+```sh
+ ./bin/spark-shell --jars ../spark-redis-ml/target/scala-2.11/spark-redis-ml_2.11-0.3.2.jar,../jedis/target/jedis-3.0.0-SNAPSHOT.jar,../jedis-ml/target/jedis-ml-1.0-SNAPSHOT.jar 
+```
+
+
+
+On Spark shell:
+
+```sh
+scala> :load "../spark-redis-ml/scripts/forest-example.scala"
+```
+
+
+
+### 
