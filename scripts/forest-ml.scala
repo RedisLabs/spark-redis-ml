@@ -71,7 +71,7 @@ def loadDatasets(
 }
 
 case class Params(
-                   input: String = "data/mllib/sample_libsvm_data.txt",
+                   input: String = "file:///root/spark/data/mllib/sample_libsvm_data.txt",
                    testInput: String = "",
                    dataFormat: String = "libsvm",
                    algo: String = "classification",
