@@ -185,24 +185,3 @@ def benchmark(b: Int) {
   println("redis:" + rtotal/b.toFloat + "ms")
 //  println("spark:" + stotal/b.toFloat+ "ms")
 }
-
-println("*******************************************")
-
-//println("Load model to Redis:")
-//time(loadToRedis())
-//println("*******************************************")
-//println("Benchmark classification:")
-//benchmark(20)
-//// Save and load model
-//println("*******************************************")
-//println("Spark save model:")
-//time {
-//  model.save(sc, "target/tmp/myRandomForestClassificationModel")
-//}
-//
-//println("*******************************************")
-//println("Spark load model:")
-//time {
-//  val sameModel = RandomForestModel.load(sc, "target/tmp/myRandomForestClassificationModel")
-//}
-//

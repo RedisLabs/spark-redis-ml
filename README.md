@@ -10,7 +10,7 @@ Apache [Spark](https://github.com/apache/spark) 2.0 or later
 
 [Jedis](https://github.com/xetorthio/jedis)
 
-[Jedis-ml](https://github.com/RedisLabsModules/jedis-ml)
+[Jedis-ml](https://github.com/RedisLabs/jedis-ml)
 
 ## Installation:
 
@@ -55,7 +55,7 @@ Run Redis server with redis-ml module:
 From Spark root directory, Run Spark shell with the required jars:
 
 ```sh
- ./bin/spark-shell --jars ../spark-redis-ml/target/scala-2.11/spark-redis-ml_2.11-0.3.2.jar,../jedis/target/jedis-3.0.0-SNAPSHOT.jar,../jedis-ml/target/jedis-ml-1.0-SNAPSHOT.jar 
+./bin/spark-shell --jars ../spark-redis-ml/target/scala-2.11/spark-redis-ml-assembly-0.1.0.jar,../spark-redis-ml/lib/jedis-3.0.0-SNAPSHOT.jar,../spark-redis-ml/lib/jedis-ml-1.0-SNAPSHOT.jar
 ```
 
 
@@ -64,6 +64,7 @@ On Spark shell:
 
 ```sh
 scala> :load "../spark-redis-ml/scripts/forest-example.scala"
+scala> benchmark(10)
 ```
 
 
