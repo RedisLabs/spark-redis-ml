@@ -29,11 +29,13 @@ mvn package -Dmaven.test.skip=true
 cd..
 git clone https://github.com/RedisLabs/jedis-ml.git
 cd jedis-ml
+mkdir lib
 cp ../jedis/target/jedis-3.0.0-SNAPSHOT.jar lib/
 mvn install 
 
 #get and build spark-jedis-ml
-cd.. git clone https://github.com/RedisLabs/spark-redis-ml.git
+cd.. 
+git clone https://github.com/RedisLabs/spark-redis-ml.git
 cd spark-redis-ml
 cp ../jedis/target/jedis-3.0.0-SNAPSHOT.jar lib/
 cp ../jedis-ml/target/jedis-ml-1.0-SNAPSHOT.jar lib/
