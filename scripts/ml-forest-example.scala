@@ -71,15 +71,18 @@ def loadDatasets(
 }
 
 case class Params(
-                   input: String = "file:///root/spark/data/mllib/sample_libsvm_data.txt",
+                   // input: String = "file:///root/spark/data/mllib/sample_libsvm_data.txt",
+                   input: String = "data/mllib/10",
                    testInput: String = "",
                    dataFormat: String = "libsvm",
                    algo: String = "classification",
+                   // algo: String = "regression",
                    maxDepth: Int = 5,
                    maxBins: Int = 32,
                    minInstancesPerNode: Int = 1,
                    minInfoGain: Double = 0.0,
-                   numTrees: Int = 10,
+                   //numTrees: Int = 2000,
+                   numTrees: Int = 5,
                    featureSubsetStrategy: String = "auto",
                    fracTest: Double = 0.2,
                    cacheNodeIds: Boolean = false,
@@ -109,7 +112,7 @@ if (algo == "classification") {
 }
 // (2) Identify categorical features using VectorIndexer.
 //     Features with more than maxCategories values will be treated as continuous.
-val featuresIndexer = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(10)
+val featuresIndexer = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(20)
 stages += featuresIndexer
 // (3) Learn Random Forest.
 val dt = new RandomForestClassifier().
@@ -158,30 +161,44 @@ def makeInputString(i: Int): String = {
   inputStr
 }
 
+def makeDF(i: Int): org.apache.spark.sql.DataFrame  = {
+  test.sqlContext.createDataFrame (sc.parallelize (test.take (i).slice (i - 1, i) ), test.schema)
+}
+
+val trans = pipelineModel.transform(test).collect()
+
 var redisRes = ""
 var sparkRes = 0.0
 var rtotal = 0.0
 var stotal = 0.0
 
 def benchmark(b: Int) {
+  rtotal = 0.0
+  stotal = 0.0
   val jedis = new Jedis("localhost")
   for (i <- 0 to b) {
     val rt0 = System.nanoTime()
     jedis.getClient.sendCommand(MLClient.ModuleCommand.FOREST_RUN, "forest-test", makeInputString(i))
-//    print("forest-test", makeInputString(i))
+    //    print("forest-test", makeInputString(i))
     redisRes = jedis.getClient().getStatusCodeReply
     val rt1 = System.nanoTime()
-    println("Redis time: " + (rt1 - rt0) / 1000000.0 + "ms, res=" + redisRes)
-
-//    val st0 = System.nanoTime()
-//    sparkRes = rfModel.predict(localData(i).features)
-//    val st1 = System.nanoTime()
-//    println("Spark time: " + (st1 - st0) / 1000000.0 + "ms, res=" + sparkRes.toInt)
+//    println("Redis time: " + (rt1 - rt0) / 1000000.0 + "ms, res=" + redisRes)
+    println("res = " + redisRes + "::" + trans(i)(6))
+    //    val st0 = System.nanoTime()
+    //    sparkRes = rfModel.predict(localData(i).features)
+    //    val st1 = System.nanoTime()
+    //    println("Spark time: " + (st1 - st0) / 1000000.0 + "ms, res=" + sparkRes.toInt)
     println("---------------------------------------");
     rtotal += (rt1 - rt0) / 1000000.0
-//    stotal += (st1 - st0) / 1000000.0
+    //    stotal += (st1 - st0) / 1000000.0
   }
   println("Classification averages:")
-  println("redis:" + rtotal/b.toFloat + "ms")
-//  println("spark:" + stotal/b.toFloat+ "ms")
+  println("redis:" + rtotal / b.toFloat + "ms")
+  //  println("spark:" + stotal/b.toFloat+ "ms")
 }
+
+:power
+vals.isettings
+vals.isettings.maxPrintString = Int.MaxValue
+
+def dbt(i: Int) = {rfModel.trees(i).toDebugString}

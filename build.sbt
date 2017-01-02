@@ -25,6 +25,7 @@ organizationHomepage := Some(url("https://redislabs.com"))
 
 // Add Spark components this package depends on, e.g, "mllib", ....
 sparkComponents ++= Seq("core", "mllib")
+//sparkComponents ++= Seq("core")
 
 //libraryDependencies ++= Seq( "redis.clients" % "jedis" % "2.7.2")
 
