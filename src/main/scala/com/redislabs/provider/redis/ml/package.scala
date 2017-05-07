@@ -5,30 +5,33 @@ import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import redis.clients.jedis.Protocol.Command
 import redis.clients.jedis.{Jedis, _}
 import com.redislabs.client.redisml.MLClient
+import org.apache.spark.ml.tree.{CategoricalSplit, ContinuousSplit, InternalNode}
 
 class Forest(trees: Array[DecisionTreeClassificationModel]) {
 
-//  private def subtreeToRedisString(n: org.apache.spark.ml.tree.Node, path: String = "."): String = {
-//    val prefix: String = s",${path},"
-//    n.getClass.getSimpleName match {
-//      case "InternalNode" => {
-//        val in = n.asInstanceOf[InternalNode]
-//        val splitStr = in.split match {
-//          case contSplit: ContinuousSplit => s"numeric,${in.split.featureIndex},${contSplit.threshold}"
-//          case catSplit: CategoricalSplit => s"categoric,${in.split.featureIndex}," + catSplit.leftCategories.mkString(":")
-//        }
-//        prefix + splitStr + subtreeToRedisString(in.leftChild, path + "l") +
-//          subtreeToRedisString(in.rightChild, path + "r")
-//      }
-//      case "LeafNode" => {
-//        prefix + s"leaf,${n.prediction}"
-//      }
-//    }
-//  }
+  private def subtreeToRedisString(n: org.apache.spark.ml.tree.Node, path: String = "."): String = {
+    val prefix: String = s",${path},"
+    n.getClass.getSimpleName match {
+      case "InternalNode" => {
+        val in = n.asInstanceOf[InternalNode]
+        val splitStr = in.split match {
+          case contSplit: ContinuousSplit => s"numeric,${in.split.featureIndex},${contSplit.threshold}"
+          case catSplit: CategoricalSplit => s"categoric,${in.split.featureIndex}," +
+            catSplit.leftCategories.mkString(":")
+        }
+        prefix + splitStr + subtreeToRedisString(in.leftChild, path + "l") +
+          subtreeToRedisString(in.rightChild, path + "r")
+      }
+      case "LeafNode" => {
+        prefix + s"leaf,${n.prediction}" +
+          s",stats,${n.getImpurityStats.mkString(":")}"
+      }
+    }
+  }
 
   private def toRedisString: String = {
     trees.zipWithIndex.map { case (tree, treeIndex) =>
-      s"${treeIndex}" + tree.rootNode.subtreeToRedisString(".")
+      s"${treeIndex}" + subtreeToRedisString(tree.rootNode, ".")
     }.fold("") { (a, b) => a + "\n" + b }
   }
 
