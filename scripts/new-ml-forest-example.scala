@@ -35,7 +35,7 @@ val featureIndexer = new VectorIndexer().setInputCol("features").setOutputCol("i
 val Array(trainingData, test) = data.randomSplit(Array(0.8, 0.2))
 
 // Train a RandomForest model.
-val rf = new RandomForestClassifier().setFeatureSubsetStrategy("all").setLabelCol("indexedLabel").setFeaturesCol("indexedFeatures").setNumTrees(100)
+val rf = new RandomForestClassifier().setFeatureSubsetStrategy("all").setLabelCol("indexedLabel").setFeaturesCol("indexedFeatures").setNumTrees(20)
 
 // Convert indexed labels back to original labels.
 val labelConverter = new IndexToString().setInputCol("prediction").setOutputCol("predictedLabel").setLabels(labelIndexer.labels)
@@ -82,8 +82,6 @@ def makeDF(i: Int): org.apache.spark.sql.DataFrame = {
   test.sqlContext.createDataFrame(sc.parallelize(test.take(i + 1).slice(i, i + 1)), test.schema)
 }
 
-//val trans = model.transform(test).collect()
-
 var redisRes = ""
 var sparkRes = 0.0
 var rtotal = 0.0
@@ -120,8 +118,6 @@ def benchmark(b: Int) {
   println(s"diffs: $diffs")
 }
 
-//:power
-//vals.isettings
 vals.isettings.maxPrintString = Int.MaxValue
 
 def dbt(i: Int) = {
@@ -130,11 +126,4 @@ def dbt(i: Int) = {
 
 def makeFV(i: Int):org.apache.spark.ml.linalg.SparseVector = {makeDF(i).take(1)(0)(1).asInstanceOf[org.apache.spark.ml.linalg.SparseVector]}
 
-val t1 = rfModel.trees(0)
-val t2 = rfModel.trees(1)
-val t3 = rfModel.trees(2)
-val f1 = makeDF(1).take(1)(0)(1).asInstanceOf[org.apache.spark.ml.linalg.SparseVector]
-val f2 = makeDF(2).take(1)(0)(1).asInstanceOf[org.apache.spark.ml.linalg.SparseVector]
-rfModel.dbg_impurityStats(f1,0)
-rfModel.dbg_impurityStats(f2,0)
 
