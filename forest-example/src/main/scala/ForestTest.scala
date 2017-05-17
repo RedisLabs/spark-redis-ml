@@ -21,6 +21,7 @@ object ForestTest {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("Forest Example")
     val sc = new SparkContext(conf)
+    sc.setLogLevel("WARN")
 
     def hola(s:String = "Mundo", n: Int = 5) {
       for (i <- 0 to n) {
