@@ -23,16 +23,6 @@ object ForestTest {
     val sc = new SparkContext(conf)
     sc.setLogLevel("WARN")
 
-    def hola(s:String = "Mundo", n: Int = 5) {
-      for (i <- 0 to n) {
-        println(s"Hola ${s} ${i}")
-      }
-    }
-
-    hola(args(0), args(1).toInt)
-
-
-
     val nTrees = args(1).toInt
     val spark = SparkSession
       .builder
