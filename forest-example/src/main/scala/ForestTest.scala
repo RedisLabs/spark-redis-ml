@@ -23,6 +23,7 @@ object ForestTest {
     val sc = new SparkContext(conf)
     sc.setLogLevel("WARN")
 
+    val movieId = args(0).split("/").last
     val nTrees = args(1).toInt
     val spark = SparkSession
       .builder
@@ -68,7 +69,7 @@ object ForestTest {
     println("Learned classification forest model:\n" + rfModel.toDebugString)
 
     val f = new Forest(rfModel.trees)
-    f.loadToRedis("forest-test", "localhost")
+    f.loadToRedis(s"movie-${movieId}", "localhost")
 
     val localData = featureIndexer.transform(test).collect
 
@@ -101,7 +102,7 @@ object ForestTest {
       val jedis = new Jedis("localhost")
       for (i <- 0 to b) {
         val rt0 = System.nanoTime()
-        jedis.getClient.sendCommand(MLClient.ModuleCommand.FOREST_RUN, "forest-test", makeInputString(i))
+        jedis.getClient.sendCommand(MLClient.ModuleCommand.FOREST_RUN, s"movie-${movieId}", makeInputString(i))
         redisRes = jedis.getClient().getStatusCodeReply
         val rt1 = System.nanoTime()
         println("Redis time: " + (rt1 - rt0) / 1000000.0 + "ms, res=" + redisRes)
