@@ -45,6 +45,6 @@ cd ml-100k && ./gen_data.py &&\
 rm  /ml-100k.zip && rm -rf /ml-100k
 
 WORKDIR /spark-redis-ml/forest-example
-CMD ["/spark/bin/spark-submit", "--master", "local[*]", "--jars", "lib/jedis-ml-1.0-SNAPSHOT.jar,lib/jedis-3.0.0-SNAPSHOT.jar,lib/spark-redis-ml-assembly-0.1.0.jar,lib/spark-mllib_2.11-2.2.0-SNAPSHOT.jar", "./target/scala-2.11/forestexample_2.11-0.1.0.jar", "/ml-100k/out/10", "20"]
+CMD ["/spark/bin/spark-submit", "--master", "local[*]", "--jars", "lib/jedis-ml-1.0-SNAPSHOT.jar,lib/jedis-3.0.0-SNAPSHOT.jar,lib/spark-redis-ml-assembly-0.1.0.jar,lib/spark-mllib_2.11-2.2.0-SNAPSHOT.jar", "./target/scala-2.11/forestexample_2.11-0.1.0.jar", "/spark/data/mllib/10", "20"]
 
 
