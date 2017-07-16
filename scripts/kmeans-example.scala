@@ -13,6 +13,7 @@ val numIterations = 20
 val clusters = KMeans.train(parsedData, numClusters, numIterations)
 
 val cmd = "my_km_model" +: numClusters.toString +: "3" +: clusters.clusterCenters.map(x => x.toArray).flatten.mkString(",").split(",")
+val jedis = new Jedis("localhost")
 jedis.getClient.sendCommand(MLClient.ModuleCommand.KMEANS_SET, cmd: _*)
 jedis.getClient().getStatusCodeReply
 
