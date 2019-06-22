@@ -1,3 +1,7 @@
+---
+#### Notice RedisML is planned to be replaced by [RedisAI](http://redisai.io), adding support for deep learning.
+***
+
 # Spark-Redis-ML
 
 ### A spark package for loading Spark ML models to  [Redis-ML](https://github.com/RedisLabsModules/redis-ml "Redis-ML")   
